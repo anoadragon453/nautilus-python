@@ -360,7 +360,7 @@ static void
 nautilus_python_object_menu_provider_iface_init (NautilusMenuProviderIface *iface)
 {
 	iface->get_background_items = nautilus_python_object_get_background_items;
-	iface->get_toolbar_items = nautilus_python_object_get_toolbar_items;
+	//iface->get_toolbar_items = nautilus_python_object_get_toolbar_items;
 	iface->get_file_items = nautilus_python_object_get_file_items;
 }
 
@@ -419,6 +419,53 @@ nautilus_python_object_cancel_update (NautilusInfoProvider 		*provider,
 
  beach:
 	pyg_gil_state_release(state);
+}
+#undef METHOD_NAME
+
+#define METHOD_NAME "file_open"
+/* Called when a file is opened 
+ * Return value determines whether file is opened or not
+ */
+static gboolean // bool/gboolean? was NautilusOperationResult 
+nautilus_python_object_file_open (NautilusInfoProvider *provider,
+                                  NautilusFile *file)
+{
+    NautilusPythonObject *object = (NautilusPythonObject*)provider;
+    NautilusOperationResult ret = NAUTILUS_OPERATION_COMPLETE;
+    PyObject *py_ret = NULL;
+
+    debug_enter();
+
+    CHECK_OBJECT(object);
+
+    /* Call the libnautilus-extension method */
+    py_ret = PyObject_CallMethod(object->instance,
+                                 METHOD_PREFIX "file_open", "(NNNN)",
+                                 pygobject_new((GObject*)provider),
+                                 pyg_pointer_new(G_TYPE_POINTER, *handle),
+                                 pyg_boxed_new(G_TYPE_CLOSURE, update_complete, TRUE, TRUE),
+                                 pygobject_new((GObject*)file));
+                                 // Not sure what to do about the arguments yet...
+
+
+    // Unsure if the following stuff is needed
+    HANDLE_RETVAL(py_ret);
+
+    if (!PyInt_Check(py_ret))
+    {
+            PyErr_SetString(PyExc_TypeError, METHOD_NAME " must return None or a int");
+            goto beach;
+    }
+
+    ret = PyInt_AsLong(py_ret);
+
+ beach:
+        free_pygobject_data(file, NULL);
+        Py_XDECREF(py_ret);
+        pyg_gil_state_release(state);
+
+    return ret;
+
 }
 #undef METHOD_NAME
 
