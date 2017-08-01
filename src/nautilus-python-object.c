@@ -425,8 +425,9 @@ nautilus_python_object_cancel_update (NautilusInfoProvider 		*provider,
 #define METHOD_NAME "file_open"
 /* Called when a file is opened 
  * Return value determines whether file is opened or not
+ * TODO: Perhaps make compatible with the waiting system that info-provider uses?
  */
-static gboolean // bool/gboolean? was NautilusOperationResult 
+static gboolean // bool/gboolean?
 nautilus_python_object_file_open (NautilusInfoProvider *provider,
                                   NautilusFile *file)
 {
@@ -439,16 +440,13 @@ nautilus_python_object_file_open (NautilusInfoProvider *provider,
     CHECK_OBJECT(object);
 
     /* Call the libnautilus-extension method */
+    // This is when it's called within the extension I assume.
     py_ret = PyObject_CallMethod(object->instance,
-                                 METHOD_PREFIX "file_open", "(NNNN)",
+                                 METHOD_PREFIX "file_open", "(NN)",
                                  pygobject_new((GObject*)provider),
-                                 pyg_pointer_new(G_TYPE_POINTER, *handle),
-                                 pyg_boxed_new(G_TYPE_CLOSURE, update_complete, TRUE, TRUE),
                                  pygobject_new((GObject*)file));
-                                 // Not sure what to do about the arguments yet...
 
-
-    // Unsure if the following stuff is needed
+    // Checking the return value, should be bool aka int(?)
     HANDLE_RETVAL(py_ret);
 
     if (!PyInt_Check(py_ret))
@@ -465,7 +463,6 @@ nautilus_python_object_file_open (NautilusInfoProvider *provider,
         pyg_gil_state_release(state);
 
     return ret;
-
 }
 #undef METHOD_NAME
 
