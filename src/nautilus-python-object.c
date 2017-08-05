@@ -17,7 +17,7 @@
  *  Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *  Author: Dave Camp <dave@ximian.com>
- * 
+ *
  */
 
 #include <config.h>
@@ -124,7 +124,7 @@ free_pygobject_data_list(GList *list)
 {
 	if (list == NULL)
 		return;
-		
+
 	g_list_foreach(list, (GFunc)free_pygobject_data, NULL);
 }
 
@@ -137,20 +137,20 @@ nautilus_python_object_get_property_pages (NautilusPropertyPageProvider *provide
     PyObject *py_files, *py_ret = NULL;
     GList *ret = NULL;
 	PyGILState_STATE state = pyg_gil_state_ensure();
-	
+
   	debug_enter();
 
 	CHECK_OBJECT(object);
 	CHECK_METHOD_NAME(object->instance);
 
 	CONVERT_LIST(py_files, files);
-	
+
     py_ret = PyObject_CallMethod(object->instance, METHOD_PREFIX METHOD_NAME,
 								 "(N)", py_files);
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusPropertyPage, "nautilus.PropertyPage");
-	
+
  beach:
 	Py_XDECREF(py_ret);
 	pyg_gil_state_release(state);
@@ -223,26 +223,26 @@ nautilus_python_object_get_file_items (NautilusMenuProvider *provider,
     PyObject *py_ret = NULL, *py_files;
 	PyGILState_STATE state = pyg_gil_state_ensure();
 	PyObject *provider_version = NULL;
-	
+
   	debug_enter();
 
-	CHECK_OBJECT(object);	
+	CHECK_OBJECT(object);
 
 	if (PyObject_HasAttrString(object->instance, "get_file_items_full"))
 	{
 		CONVERT_LIST(py_files, files);
 		py_ret = PyObject_CallMethod(object->instance, METHOD_PREFIX "get_file_items_full",
 									 "(NNN)",
-									 pygobject_new((GObject *)provider), 
-									 pygobject_new((GObject *)window), 
+									 pygobject_new((GObject *)provider),
+									 pygobject_new((GObject *)window),
 									 py_files);
 	}
 	else if (PyObject_HasAttrString(object->instance, "get_file_items"))
 	{
 		CONVERT_LIST(py_files, files);
 		py_ret = PyObject_CallMethod(object->instance, METHOD_PREFIX METHOD_NAME,
-									 "(NN)", 
-									 pygobject_new((GObject *)window), 
+									 "(NN)",
+									 pygobject_new((GObject *)window),
 									 py_files);
 	}
 	else
@@ -272,7 +272,7 @@ nautilus_python_object_get_background_items (NautilusMenuProvider *provider,
     GList *ret = NULL;
     PyObject *py_ret = NULL;
 	PyGILState_STATE state = pyg_gil_state_ensure();
-	
+
   	debug_enter();
 
 	CHECK_OBJECT(object);
@@ -300,7 +300,7 @@ nautilus_python_object_get_background_items (NautilusMenuProvider *provider,
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusMenuItem, "nautilus.MenuItem");
-	
+
  beach:
 	free_pygobject_data(file, NULL);
 	Py_XDECREF(py_ret);
@@ -319,9 +319,9 @@ nautilus_python_object_get_toolbar_items (NautilusMenuProvider *provider,
     GList *ret = NULL;
     PyObject *py_ret = NULL;
 	PyGILState_STATE state = pyg_gil_state_ensure();
-	
+
   	debug_enter();
-  	
+
 	CHECK_OBJECT(object);
 
 	if (PyObject_HasAttrString(object->instance, "get_toolbar_items_full"))
@@ -343,11 +343,11 @@ nautilus_python_object_get_toolbar_items (NautilusMenuProvider *provider,
 	{
 		goto beach;
 	}
-	
+
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusMenuItem, "nautilus.MenuItem");
-	
+
  beach:
  	free_pygobject_data(file, NULL);
 	Py_XDECREF(py_ret);
@@ -374,7 +374,7 @@ nautilus_python_object_get_columns (NautilusColumnProvider *provider)
 	PyGILState_STATE state = pyg_gil_state_ensure();                                    \
 
 	debug_enter();
-		
+
 	CHECK_OBJECT(object);
 	CHECK_METHOD_NAME(object->instance);
 
@@ -384,7 +384,7 @@ nautilus_python_object_get_columns (NautilusColumnProvider *provider)
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusColumn, "nautilus.Column");
-	
+
  beach:
  	Py_XDECREF(py_ret);
 	pyg_gil_state_release(state);
@@ -423,7 +423,7 @@ nautilus_python_object_cancel_update (NautilusInfoProvider 		*provider,
 #undef METHOD_NAME
 
 #define METHOD_NAME "file_open"
-/* Called when a file is opened 
+/* Called when a file is opened
  * Return value determines whether file is opened or not
  * TODO: Perhaps make compatible with the waiting system that info-provider uses?
  */
@@ -434,6 +434,7 @@ nautilus_python_object_file_open (NautilusInfoProvider *provider,
     NautilusPythonObject *object = (NautilusPythonObject*)provider;
     NautilusOperationResult ret = NAUTILUS_OPERATION_COMPLETE;
     PyObject *py_ret = NULL;
+	PyGILState_STATE state = pyg_gil_state_ensure(); 
 
     debug_enter();
 
@@ -501,7 +502,7 @@ nautilus_python_object_update_file_info (NautilusInfoProvider 		*provider,
 	{
 		goto beach;
 	}
-	
+
 	HANDLE_RETVAL(py_ret);
 
 	if (!PyInt_Check(py_ret))
@@ -512,7 +513,7 @@ nautilus_python_object_update_file_info (NautilusInfoProvider 		*provider,
 	}
 
 	ret = PyInt_AsLong(py_ret);
-	
+
  beach:
  	free_pygobject_data(file, NULL);
 	Py_XDECREF(py_ret);
@@ -528,7 +529,7 @@ nautilus_python_object_info_provider_iface_init (NautilusInfoProviderIface *ifac
 	iface->update_file_info = nautilus_python_object_update_file_info;
 }
 
-static void 
+static void
 nautilus_python_object_instance_init (NautilusPythonObject *object)
 {
 	NautilusPythonObjectClass *class;
@@ -557,20 +558,20 @@ nautilus_python_object_class_init (NautilusPythonObjectClass *class,
 	debug_enter();
 
 	parent_class = g_type_class_peek_parent (class);
-	
+
 	class->type = (PyObject*)class_data;
-	
+
 	G_OBJECT_CLASS (class)->finalize = nautilus_python_object_finalize;
 }
 
-GType 
-nautilus_python_object_get_type (GTypeModule *module, 
+GType
+nautilus_python_object_get_type (GTypeModule *module,
 								 PyObject 	*type)
 {
 	GTypeInfo *info;
 	const char *type_name;
 	GType gtype;
-	  
+
 	static const GInterfaceInfo property_page_provider_iface_info = {
 		(GInterfaceInitFunc) nautilus_python_object_property_page_provider_iface_init,
 		NULL,
@@ -603,7 +604,7 @@ nautilus_python_object_get_type (GTypeModule *module,
 
 	debug_enter_args("type=%s", PyString_AsString(PyObject_GetAttrString(type, "__name__")));
 	info = g_new0 (GTypeInfo, 1);
-	
+
 	info->class_size = sizeof (NautilusPythonObjectClass);
 	info->class_init = (GClassInitFunc)nautilus_python_object_class_init;
 	info->instance_size = sizeof (NautilusPythonObject);
@@ -614,15 +615,15 @@ nautilus_python_object_get_type (GTypeModule *module,
 
 	type_name = g_strdup_printf("%s+NautilusPython",
 								PyString_AsString(PyObject_GetAttrString(type, "__name__")));
-		
-	gtype = g_type_module_register_type (module, 
+
+	gtype = g_type_module_register_type (module,
 										 G_TYPE_OBJECT,
 										 type_name,
 										 info, 0);
 
 	if (PyObject_IsSubclass(type, (PyObject*)&PyNautilusPropertyPageProvider_Type))
 	{
-		g_type_module_add_interface (module, gtype, 
+		g_type_module_add_interface (module, gtype,
 									 NAUTILUS_TYPE_PROPERTY_PAGE_PROVIDER,
 									 &property_page_provider_iface_info);
 	}
@@ -633,27 +634,27 @@ nautilus_python_object_get_type (GTypeModule *module,
 									 NAUTILUS_TYPE_LOCATION_WIDGET_PROVIDER,
 									 &location_widget_provider_iface_info);
 	}
-	
+
 	if (PyObject_IsSubclass(type, (PyObject*)&PyNautilusMenuProvider_Type))
 	{
-		g_type_module_add_interface (module, gtype, 
+		g_type_module_add_interface (module, gtype,
 									 NAUTILUS_TYPE_MENU_PROVIDER,
 									 &menu_provider_iface_info);
 	}
 
 	if (PyObject_IsSubclass(type, (PyObject*)&PyNautilusColumnProvider_Type))
 	{
-		g_type_module_add_interface (module, gtype, 
+		g_type_module_add_interface (module, gtype,
 									 NAUTILUS_TYPE_COLUMN_PROVIDER,
 									 &column_provider_iface_info);
 	}
-	
+
 	if (PyObject_IsSubclass(type, (PyObject*)&PyNautilusInfoProvider_Type))
 	{
-		g_type_module_add_interface (module, gtype, 
+		g_type_module_add_interface (module, gtype,
 									 NAUTILUS_TYPE_INFO_PROVIDER,
 									 &info_provider_iface_info);
 	}
-	
+
 	return gtype;
 }
