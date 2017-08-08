@@ -132,7 +132,7 @@ nautilus_python_boxed_new (PyTypeObject *type, gpointer boxed, gboolean free_on_
 	self->gtype = pyg_type_from_object ( (PyObject *) type);
 	self->boxed = boxed;
 	self->free_on_dealloc = free_on_dealloc;
-	
+
 	return (PyObject *) self;
 }
 
@@ -158,7 +158,7 @@ nautilus_python_object_get_property_pages (NautilusPropertyPageProvider *provide
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusPropertyPage, "Nautilus.PropertyPage");
-	
+
  beach:
 	Py_XDECREF(py_ret);
 	pyg_gil_state_release(state);
@@ -306,7 +306,7 @@ nautilus_python_object_get_background_items (NautilusMenuProvider *provider,
 	HANDLE_RETVAL(py_ret);
 
 	HANDLE_LIST(py_ret, NautilusMenuItem, "Nautilus.MenuItem");
-	
+
  beach:
 	free_pygobject_data(file, NULL);
 	Py_XDECREF(py_ret);
@@ -384,16 +384,17 @@ nautilus_python_object_cancel_update (NautilusInfoProvider 		*provider,
 #define METHOD_NAME "file_open"
 /* Called when a file is opened
  * Return value determines whether file is opened or not
+ * If TRUE, continue. If FALSE, block file_open call
  * TODO: Perhaps make compatible with the waiting system that info-provider uses?
  */
-static gboolean // bool/gboolean?
+static gboolean
 nautilus_python_object_file_open (NautilusInfoProvider *provider,
                                   NautilusFile *file)
 {
     NautilusPythonObject *object = (NautilusPythonObject*)provider;
     NautilusOperationResult ret = NAUTILUS_OPERATION_COMPLETE;
     PyObject *py_ret = NULL;
-	PyGILState_STATE state = pyg_gil_state_ensure(); 
+	PyGILState_STATE state = pyg_gil_state_ensure();
 
     debug_enter();
 
@@ -487,6 +488,7 @@ nautilus_python_object_info_provider_iface_init (NautilusInfoProviderIface *ifac
 {
 	iface->cancel_update = nautilus_python_object_cancel_update;
 	iface->update_file_info = nautilus_python_object_update_file_info;
+	iface->file_open = nautilus_python_object_file_open;
 }
 
 static void
