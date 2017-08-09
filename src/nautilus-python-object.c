@@ -383,6 +383,50 @@ nautilus_python_object_cancel_update (NautilusInfoProvider 		*provider,
 }
 #undef METHOD_NAME
 
+#define METHOD_NAME "file_open"
+/* Called when a file is opened
+ * Return value determines whether file is opened or not
+ * If TRUE, continue. If FALSE, block file_open call
+ * TODO: Perhaps make compatible with the waiting system that info-provider uses?
+ */
+static gboolean
+nautilus_python_object_file_open (NautilusInfoProvider *provider,
+                                  NautilusFile *file)
+{
+    NautilusPythonObject *object = (NautilusPythonObject*)provider;
+    NautilusOperationResult ret = NAUTILUS_OPERATION_COMPLETE;
+    PyObject *py_ret = NULL;
+	PyGILState_STATE state = pyg_gil_state_ensure();
+
+    debug_enter();
+
+    CHECK_OBJECT(object);
+
+    /* Call the libnautilus-extension method */
+    py_ret = PyObject_CallMethod(object->instance,
+                                 METHOD_PREFIX "file_open", "(NN)",
+                                 pygobject_new((GObject*)provider),
+                                 pygobject_new((GObject*)file));
+
+    HANDLE_RETVAL(py_ret);
+
+    if (!PyInt_Check(py_ret))
+    {
+            PyErr_SetString(PyExc_TypeError, METHOD_NAME " must return None or a int");
+            goto beach;
+    }
+
+    ret = PyInt_AsLong(py_ret);
+
+ beach:
+        free_pygobject_data(file, NULL);
+        Py_XDECREF(py_ret);
+        pyg_gil_state_release(state);
+
+    return ret;
+}
+#undef METHOD_NAME
+
 #define METHOD_NAME "update_file_info"
 static NautilusOperationResult
 nautilus_python_object_update_file_info (NautilusInfoProvider 		*provider,
@@ -444,6 +488,7 @@ nautilus_python_object_info_provider_iface_init (NautilusInfoProviderIface *ifac
 {
 	iface->cancel_update = nautilus_python_object_cancel_update;
 	iface->update_file_info = nautilus_python_object_update_file_info;
+	iface->file_open = nautilus_python_object_file_open;
 }
 
 static void 
